@@ -10,11 +10,15 @@ from rest_framework_csv.orderedrows import OrderedRows
 
 
 def preprocess_stream(stream, charset):
-    if six.PY2:
-        # csv.py doesn't do Unicode; encode temporarily:
-        return (chunk.encode(charset) for chunk in stream)
-    else:
-        return stream
+    # csv.py doesn't do Unicode; encode temporarily:
+    for chunk in stream:
+        if six.PY2:
+            try:
+                yield chunk.encode(charset)
+            except UnicodeDecodeError:
+                yield chunk.decode('iso-8859-1').encode(charset)
+        else:
+            yield chunk
 
 def postprocess_row(row, charset):
     if six.PY2:
